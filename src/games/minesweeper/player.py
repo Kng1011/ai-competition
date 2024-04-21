@@ -1,7 +1,7 @@
 from abc import ABC
 
-from src.games.minesweeper.result import MinesweeperResult
-from src.games.player import Player
+from games.minesweeper.result import MinesweeperResult
+from games.player import Player
 
 
 class MinesweeperPlayer(Player, ABC):

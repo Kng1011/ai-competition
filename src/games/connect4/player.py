@@ -1,7 +1,7 @@
 from abc import ABC
 
-from src.games.connect4.result import Connect4Result
-from src.games.player import Player
+from games.connect4.result import Connect4Result
+from games.player import Player
 
 
 class Connect4Player(Player, ABC):

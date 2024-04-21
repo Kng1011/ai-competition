@@ -1,6 +1,6 @@
-from src.games.hlpoker.action import HLPokerAction
-from src.games.hlpoker.round import Round
-from src.games.state import State
+from games.hlpoker.action import HLPokerAction
+from games.hlpoker.round import Round
+from games.state import State
 from phevaluator.evaluator import evaluate_cards
 
 

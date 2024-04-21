@@ -1,7 +1,7 @@
-from src.games.minesweeper.action import MinesweeperAction
-from src.games.minesweeper.player import MinesweeperPlayer
-from src.games.minesweeper.state import MinesweeperState
-from src.games.game_simulator import GameSimulator
+from games.minesweeper.action import MinesweeperAction
+from games.minesweeper.player import MinesweeperPlayer
+from games.minesweeper.state import MinesweeperState
+from games.game_simulator import GameSimulator
 
 
 class MinesweeperSimulator(GameSimulator):

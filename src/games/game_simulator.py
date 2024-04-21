@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from src.games.player import Player
-from src.games.state import State
+from games.player import Player
+from games.state import State
 
 
 class GameSimulator(ABC):

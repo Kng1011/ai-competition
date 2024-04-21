@@ -2,9 +2,9 @@ from typing import Optional
 
 from termcolor import colored
 
-from src.games.connect4.action import Connect4Action
-from src.games.connect4.result import Connect4Result
-from src.games.state import State
+from games.connect4.action import Connect4Action
+from games.connect4.result import Connect4Result
+from games.state import State
 
 
 class Connect4State(State):

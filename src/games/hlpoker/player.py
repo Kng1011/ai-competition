@@ -2,10 +2,10 @@ from abc import ABC, abstractmethod
 
 from termcolor import colored
 
-from src.games.hlpoker.card import Card, Suit
-from src.games.hlpoker.round import Round
-from src.games.hlpoker.state import HLPokerState
-from src.games.player import Player
+from games.hlpoker.card import Card, Suit
+from games.hlpoker.round import Round
+from games.hlpoker.state import HLPokerState
+from games.player import Player
 
 
 class HLPokerPlayer(Player, ABC):

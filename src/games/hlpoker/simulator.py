@@ -2,12 +2,12 @@ from random import shuffle
 
 from termcolor import cprint
 
-from src.games.game_simulator import GameSimulator
-from src.games.hlpoker.action import HLPokerAction
-from src.games.hlpoker.card import Card, Suit, Rank
-from src.games.hlpoker.round import Round
-from src.games.hlpoker.state import HLPokerState
-from src.games.hlpoker.player import HLPokerPlayer
+from games.game_simulator import GameSimulator
+from games.hlpoker.action import HLPokerAction
+from games.hlpoker.card import Card, Suit, Rank
+from games.hlpoker.round import Round
+from games.hlpoker.state import HLPokerState
+from games.hlpoker.player import HLPokerPlayer
 
 
 class HLPokerSimulator(GameSimulator):

@@ -2,9 +2,9 @@ import random
 
 from termcolor import colored
 
-from src.games.minesweeper.action import MinesweeperAction
-from src.games.minesweeper.result import MinesweeperResult
-from src.games.state import State
+from games.minesweeper.action import MinesweeperAction
+from games.minesweeper.result import MinesweeperResult
+from games.state import State
 
 
 class MinesweeperState(State):
