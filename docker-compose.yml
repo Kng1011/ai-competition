@@ -1,0 +1,6 @@
+services:
+  ai-competition:
+    container_name: ai-competition
+    build: docker/python
+    volumes:
+      - ./src:/app
