@@ -11,7 +11,7 @@ from games.minesweeper.simulator import MinesweeperSimulator
 AVAILABLE_GAME_TYPES = {
     "hlpoker":      HLPokerSimulator,
     "connect4":     Connect4Simulator,
-    "minesweeper":  MinesweeperSimulator
+    "minesweeper":  MinesweeperSimulator,
 }
 
 
