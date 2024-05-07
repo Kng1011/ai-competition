@@ -84,7 +84,11 @@ class BestMinesweeperPlayer(MinesweeperPlayer):
             for c in range(max(0, col - 1), min(num_cols, col + 2)):
                 if grid[r][c] > 0:  # Cell is a number
                     distance = abs(r - row) + abs(c - col)  # Manhattan distance
-                    risk += grid[r][c] * (1 / distance)  # Weight based on distance
+                    probability = grid[r][c] * (1 / distance)  # Weight based on distance
+                    risk += BestMinesweeperPlayer.calculate_mine_probability(probability, 1)
+                elif grid[r][c] == MinesweeperState.EMPTY_CELL:
+                    distance = abs(r - row) + abs(c - col)  # Manhattan distance
+                    risk += 0.1 * (1 / (distance + 1e-9))  # Penalty for unrevealed neighbors
 
         # If no risk indication from neighbors, consider the number of unrevealed neighbors as a fallback risk measure
         if risk == 0:
@@ -92,6 +96,9 @@ class BestMinesweeperPlayer(MinesweeperPlayer):
 
         return risk
 
+    @staticmethod
+    def calculate_mine_probability(risk: float, total_neighbors: int) -> float:
+        return risk / total_neighbors if total_neighbors > 0 else 0
 
     def event_action(self, pos: int, action, new_state: State):
         # ignore
