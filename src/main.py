@@ -5,6 +5,7 @@ from tqdm import tqdm
 
 from constants import AVAILABLE_GAME_TYPES, AVAILABLE_PLAYER_TYPES
 
+
 def run_simulation(game_settings):
     removed_players = []
 
@@ -44,11 +45,13 @@ def run_simulation(game_settings):
     removed_players.insert(0, last_remaining_player)
     print_leaderboard(removed_players, final=True)
 
+
 def run_game_iteration(simulator, seat_permutation):
     simulator.run_simulation()
     if seat_permutation:
         simulator.change_player_positions()
         simulator.run_simulation()
+
 
 def check_draw(simulator):
     global_scores = simulator.get_global_score()
@@ -58,11 +61,13 @@ def check_draw(simulator):
         return True  # It's a draw
     return False  # Not a draw
 
+
 def update_scores(scores, simulator, names):
     # Update global scores for each player
     global_scores = simulator.get_global_score()
     for player_name, score in global_scores.items():
         scores[names[player_name]] += score
+
 
 def remove_worst_player(players, scores):
     # Find the player with the lowest score
@@ -70,10 +75,12 @@ def remove_worst_player(players, scores):
     players.remove(lowest_score_player)
     return lowest_score_player
 
+
 def update_match_results(match_results, simulator, player1, player2):
     result = simulator.get_global_score()  # Assuming this method exists and returns the match result
     match_results[player1.get_name()][player2.get_name()] = result[player1.get_name()]
     match_results[player2.get_name()][player1.get_name()] = result[player2.get_name()]
+
 
 def print_cross_table(match_results):
     print("\nCross Table:")
@@ -83,6 +90,7 @@ def print_cross_table(match_results):
         results = [match_results[name].get(opponent, 'N/A') for opponent in player_names]
         print(f"{name:<15}" + " ".join(f"{result:<15}" for result in results))
     print()
+
 
 def print_leaderboard(players, final=False):
     print("\n" + "=" * 60)
@@ -99,6 +107,7 @@ def print_leaderboard(players, final=False):
             print("{:2}. {:<40} {:>5}".format(position, f"{player.get_name()} ({player.__class__.__name__})", score))
 
     print("=" * 60 + "\n")
+
 
 def main():
     # Define a namedtuple for a Player
@@ -165,6 +174,7 @@ def main():
     }
 
     run_simulation(game_settings)
+
 
 if __name__ == '__main__':
     main()

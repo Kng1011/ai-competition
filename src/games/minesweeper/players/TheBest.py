@@ -90,6 +90,10 @@ class BestMinesweeperPlayer(MinesweeperPlayer):
                     distance = abs(r - row) + abs(c - col)  # Manhattan distance
                     risk += 0.1 * (1 / (distance + 1e-9))  # Penalty for unrevealed neighbors
 
+        revealed_neighbors = BestMinesweeperPlayer.get_revealed_neighbors(grid, row, col, num_rows, num_cols)
+        risk += BestMinesweeperPlayer.analyze_revealed_cell_distribution(revealed_neighbors, grid)
+
+
         # If no risk indication from neighbors, consider the number of unrevealed neighbors as a fallback risk measure
         if risk == 0:
             risk = BestMinesweeperPlayer.count_unrevealed_neighbors(grid, row, col, num_rows, num_cols)
@@ -100,6 +104,47 @@ class BestMinesweeperPlayer(MinesweeperPlayer):
     def calculate_mine_probability(risk: float, total_neighbors: int) -> float:
         return risk / total_neighbors if total_neighbors > 0 else 0
 
+    @staticmethod
+    def get_revealed_neighbors(grid, row, col, num_rows, num_cols):
+        """
+        Gets the coordinates of all revealed neighbors of the given cell.
+
+        Args:
+            grid: The Minesweeper game grid.
+            row: The row index of the target cell.
+            col: The column index of the target cell.
+            num_rows: The total number of rows in the grid.
+            num_cols: The total number of columns in the grid.
+
+        Returns:
+            A list of coordinates (tuples) of revealed neighbors.
+        """
+        revealed_neighbors = []
+        for r in range(max(0, row - 1), min(num_rows, row + 2)):
+            for c in range(max(0, col - 1), min(num_cols, col + 2)):
+                if (r != row or c != col) and grid[r][c] != MinesweeperState.EMPTY_CELL:
+                    revealed_neighbors.append((r, c))
+        return revealed_neighbors
+
+    @staticmethod
+    def analyze_revealed_cell_distribution(revealed_neighbors, grid):
+        """
+        Analyzes the distribution of revealed cell values in the given list.
+
+        Args:
+            revealed_neighbors: A list of coordinates (tuples) of revealed neighbors.
+
+        Returns:
+            A risk score based on the distribution of revealed cell values.
+        """
+        if not revealed_neighbors:
+            return 0  # No revealed neighbors, no additional risk
+
+
+        total_value = sum(grid[row][col] for row, col in revealed_neighbors)
+        average_value = total_value / len(revealed_neighbors)
+        return average_value * 0.2  # Adjust weight as needed (e.g., 0.2 for moderate influence)
+
     def event_action(self, pos: int, action, new_state: State):
         # ignore
         pass
@@ -107,3 +152,4 @@ class BestMinesweeperPlayer(MinesweeperPlayer):
     def event_end_game(self, final_state: State):
         # ignore
         pass
+
