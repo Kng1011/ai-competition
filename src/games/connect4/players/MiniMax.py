@@ -10,9 +10,18 @@ from games.state import State
 
 class MiniMaxConnect4Player(Connect4Player):
 
+    def __init__(self, name):
+        super().__init__(name)
+        self.memo = {}  # Initialize the memo attribute
+
     def minimax(self, state: Connect4State, depth, alpha, beta, maximizingPlayer):
         pos = self.get_current_pos()
         current_player = state.get_acting_player()
+
+        # Check if the result is in memo
+        state_key = str(state.get_grid()) + str(depth) + str(alpha) + str(beta) + str(maximizingPlayer)
+        if state_key in self.memo:
+            return self.memo[state_key]
 
         if depth == 0 or state.is_finished():
             result = state.get_result(pos)
@@ -27,12 +36,16 @@ class MiniMaxConnect4Player(Connect4Player):
                     self.event_result(None, Connect4Result.DRAW)
                     return None, 0
             else:  # Depth is zero
-                return None, state.score_position(state.get_grid(), current_player)
+                return None, MiniMaxConnect4Player.score_position(state.get_grid(), current_player)
+
+        # Order moves: prioritize the center columns
+        possible_actions = sorted(state.get_possible_actions(),
+                                  key=lambda action: abs(action.get_col() - state.get_num_cols() // 2))
 
         if maximizingPlayer:
             value = -math.inf
             column = random.choice(range(state.get_num_cols()))
-            for action in state.get_possible_actions():
+            for action in possible_actions:
                 next_state = state.clone()
                 next_state.update(action)
                 new_score = self.minimax(next_state, depth - 1, alpha, beta, False)[1]
@@ -42,11 +55,11 @@ class MiniMaxConnect4Player(Connect4Player):
                 alpha = max(alpha, value)
                 if alpha >= beta:
                     break
-            return column, value
+            result = column, value
         else:  # Minimizing player
             value = math.inf
             column = random.choice(range(state.get_num_cols()))
-            for action in state.get_possible_actions():
+            for action in possible_actions:
                 next_state = state.clone()
                 next_state.update(action)
                 new_score = self.minimax(next_state, depth - 1, alpha, beta, True)[1]
@@ -56,7 +69,12 @@ class MiniMaxConnect4Player(Connect4Player):
                 beta = min(beta, value)
                 if alpha >= beta:
                     break
-            return column, value
+            result = column, value
+
+        # Store the result in memo
+        self.memo[state_key] = result
+
+        return result
 
     def get_action(self, state: Connect4State):
         column, _ = self.minimax(state, depth=3, alpha=-math.inf, beta=math.inf, maximizingPlayer=True)
@@ -69,6 +87,60 @@ class MiniMaxConnect4Player(Connect4Player):
     def event_end_game(self, final_state: State):
         # ignore
         pass
+
+    @staticmethod
+    def score_position(grid, piece):
+        score = 0
+
+        # Score center column
+        center_array = [int(row[len(grid[0]) // 2]) for row in grid]
+        center_count = center_array.count(piece)
+        score += center_count * 3
+
+        # Score Horizontal
+        for r in range(len(grid)):
+            row_array = [int(i) for i in grid[r]]
+            for c in range(len(grid[0]) - 3):
+                window = row_array[c:c + 4]
+                score += MiniMaxConnect4Player.evaluate_window(window, piece)
+
+        # Score Vertical
+        for c in range(len(grid[0])):
+            col_array = [int(row[c]) for row in grid]
+            for r in range(len(grid) - 3):
+                window = col_array[r:r + 4]
+                score += MiniMaxConnect4Player.evaluate_window(window, piece)
+
+        # Score positive sloped diagonal
+        for r in range(len(grid) - 3):
+            for c in range(len(grid[0]) - 3):
+                window = [grid[r + i][c + i] for i in range(4)]
+                score += MiniMaxConnect4Player.evaluate_window(window, piece)
+
+        # Score negatively sloped diagonal
+        for r in range(len(grid) - 3):
+            for c in range(len(grid[0]) - 3):
+                window = [grid[r + 3 - i][c + i] for i in range(4)]
+                score += MiniMaxConnect4Player.evaluate_window(window, piece)
+
+        return score
+
+    @staticmethod
+    def evaluate_window(window, piece):
+        score = 0
+        opponent_piece = 1 if piece == 2 else 2
+
+        if window.count(piece) == 4:
+            score += 100
+        elif window.count(piece) == 3 and window.count(0) == 1:
+            score += 5
+        elif window.count(piece) == 2 and window.count(0) == 2:
+            score += 2
+
+        if window.count(opponent_piece) == 3 and window.count(0) == 1:
+            score -= 4
+
+        return score
 
 
 

@@ -205,37 +205,37 @@ class Connect4State(State):
         score = 0
 
         # Convertendo grid para um array NumPy
-        grid_array = np.array(grid)
+
 
         # Score center column
-        center_array = [int(i) for i in list(grid_array[:, grid_array.shape[1] // 2])]
+        center_array = [int(i) for i in list(grid[:, grid.shape[1] // 2])]
         center_count = center_array.count(piece)
         score += center_count * 3
 
         # Score Horizontal
-        for r in range(grid_array.shape[0]):
-            row_array = [int(i) for i in list(grid_array[r, :])]
-            for c in range(grid_array.shape[1] - 3):
+        for r in range(grid.shape[0]):
+            row_array = [int(i) for i in list(grid[r, :])]
+            for c in range(grid.shape[1] - 3):
                 window = row_array[c:c + 4]
                 score += self.evaluate_window(window, piece)
 
         # Score Vertical
-        for c in range(grid_array.shape[1]):
-            col_array = [int(i) for i in list(grid_array[:, c])]
-            for r in range(grid_array.shape[0] - 3):
+        for c in range(grid.shape[1]):
+            col_array = [int(i) for i in list(grid[:, c])]
+            for r in range(grid.shape[0] - 3):
                 window = col_array[r:r + 4]
                 score += self.evaluate_window(window, piece)
 
         # Score positive sloped diagonal
-        for r in range(grid_array.shape[0] - 3):
-            for c in range(grid_array.shape[1] - 3):
-                window = [grid_array[r + i][c + i] for i in range(4)]
+        for r in range(grid.shape[0] - 3):
+            for c in range(grid.shape[1] - 3):
+                window = [grid[r + i][c + i] for i in range(4)]
                 score += self.evaluate_window(window, piece)
 
         # Score negatively sloped diagonal
-        for r in range(grid_array.shape[0] - 3):
-            for c in range(grid_array.shape[1] - 3):
-                window = [grid_array[r + 3 - i][c + i] for i in range(4)]
+        for r in range(grid.shape[0] - 3):
+            for c in range(grid.shape[1] - 3):
+                window = [grid[r + 3 - i][c + i] for i in range(4)]
                 score += self.evaluate_window(window, piece)
 
         return score
