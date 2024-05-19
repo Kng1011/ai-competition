@@ -18,6 +18,7 @@ class BestMinesweeperPlayer(MinesweeperPlayer):
         num_cols = state.get_num_cols()
         possible_actions = list(state.get_possible_actions())
 
+
         if len(possible_actions) >= 42:
             for action in possible_actions:
                 if (action.get_row() == 0 or action.get_row() == state.get_num_rows() - 1) and (
@@ -44,9 +45,15 @@ class BestMinesweeperPlayer(MinesweeperPlayer):
 
         # Introduce probability bias towards lower risk within the group
         # (Here, a simple linear weighting is used)
-        weights = [1 + 0.1 * (i - len(low_risk_actions) + 1) for i in range(len(low_risk_actions))]
+        # Introduce probability bias towards lower risk within the group
+        # (Here, a steeper linear weighting is used)
+        weights = [1 + 0.2 * (i - len(low_risk_actions) + 1) for i in
+                   range(len(low_risk_actions))]  # Steeper slope for higher bias
 
-        min_weight = 1e-6
+        # OR (exponential weighting for even higher bias)
+        # weights = [math.exp(i * 0.5) for i in range(len(low_risk_actions))]
+
+        min_weight = 0.01  # Increased minimum weight for larger weight difference
         weights = [max(w, min_weight) for w in weights]
         action = random.choices(low_risk_actions, weights=weights)[0]
         return action
@@ -93,6 +100,11 @@ class BestMinesweeperPlayer(MinesweeperPlayer):
         revealed_neighbors = BestMinesweeperPlayer.get_revealed_neighbors(grid, row, col, num_rows, num_cols)
         risk += BestMinesweeperPlayer.analyze_revealed_cell_distribution(revealed_neighbors, grid)
 
+        num_mines_in_neighborhood = BestMinesweeperPlayer.count_mines_in_neighborhood(grid, row, col, num_rows, num_cols)
+        risk += num_mines_in_neighborhood * 0.1
+
+        num_unrevealed_neighbors = BestMinesweeperPlayer.count_unrevealed_neighbors(grid, row, col, num_rows, num_cols)
+        risk += num_unrevealed_neighbors * 0.05
 
         # If no risk indication from neighbors, consider the number of unrevealed neighbors as a fallback risk measure
         if risk == 0:
@@ -144,6 +156,15 @@ class BestMinesweeperPlayer(MinesweeperPlayer):
         total_value = sum(grid[row][col] for row, col in revealed_neighbors)
         average_value = total_value / len(revealed_neighbors)
         return average_value * 0.2  # Adjust weight as needed (e.g., 0.2 for moderate influence)
+
+    @staticmethod
+    def count_mines_in_neighborhood( grid, row, col, num_rows, num_cols):
+        count = 0
+        for r in range(max(0, row - 1), min(num_rows, row + 2)):
+            for c in range(max(0, col - 1), min(num_cols, col + 2)):
+                if grid[r][c] == -2:
+                    count += 1
+        return count
 
     def event_action(self, pos: int, action, new_state: State):
         # ignore
