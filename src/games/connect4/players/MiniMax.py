@@ -77,8 +77,13 @@ class MiniMaxConnect4Player(Connect4Player):
         return result
 
     def get_action(self, state: Connect4State):
-        column, _ = self.minimax(state, depth=3, alpha=-math.inf, beta=math.inf, maximizingPlayer=True)
-        return Connect4Action(column)
+        # Order moves: prioritize the center columns
+        possible_actions = sorted(state.get_possible_actions(),
+                                  key=lambda action: abs(action.get_col() - state.get_num_cols() // 2))
+        for action in possible_actions:
+            column, _ = self.minimax(state, depth=2, alpha=-math.inf, beta=math.inf, maximizingPlayer=True)
+            if column is not None:
+                return Connect4Action(column)
 
     def event_action(self, pos: int, action, new_state: State):
         # ignore
@@ -133,14 +138,17 @@ class MiniMaxConnect4Player(Connect4Player):
         if window.count(piece) == 4:
             score += 100
         elif window.count(piece) == 3 and window.count(0) == 1:
-            score += 5
+            if window.index(0) == 0 or window.index(0) == 3:  # Threat can be completed next turn
+                score += 15
+            else:
+                score += 5
         elif window.count(piece) == 2 and window.count(0) == 2:
             score += 2
 
         if window.count(opponent_piece) == 3 and window.count(0) == 1:
-            score -= 4
+            if window.index(0) == 0 or window.index(0) == 3:  # Block opponent's winning threat
+                score += 10
+            else:
+                score -= 4
 
         return score
-
-
-
