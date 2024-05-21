@@ -12,20 +12,23 @@ class PokerPlayer(HLPokerPlayer):
     def __init__(self, name):
         super().__init__(name)
         self.opponent_actions = []
+        self.current_cards = []
 
     def get_action_with_cards(self, state: HLPokerState, private_cards, board_cards):
         possible_actions = list(state.get_possible_actions())
         action_results = {action: [] for action in possible_actions}
         hand_evaluation = 0
+        self.current_cards = private_cards + board_cards
 
         if len(board_cards) + len(private_cards) >= 5:
-            hand_evaluation = state.evaluate_hand(private_cards + board_cards)
+            hand_evaluation = self.evaluate_hand(private_cards + board_cards)
 
-        for _ in range(100):  # number of simulations
+        for _ in range(150):  # number of simulations
             for action in possible_actions:
                 result = self.simulate_hand(state, action)
                 if hand_evaluation != 0:
-                    action_results[action].append(result + hand_evaluation)  # use hand evaluation to influence action selection
+                    action_results[action].append(
+                        result + hand_evaluation)  # use hand evaluation to influence action selection
                 else:
                     action_results[action].append(result)
 
@@ -51,13 +54,37 @@ class PokerPlayer(HLPokerPlayer):
             possible_actions = simulated_state.get_possible_actions()
             random_action = random.choice(possible_actions)
             simulated_state.update(random_action)
-        return simulated_state.get_result(self.get_current_pos())
-
+        return simulated_state.get_result(self.get_current_pos()) + self.evaluate_hand(self.current_cards)
 
     @staticmethod
     def evaluate_hand(hand):
-        # This is a placeholder. You should implement your own hand evaluation logic here.
-        return sum(card.value for card in hand)
+
+        # New hand evaluation logic
+        ranks = [card.rank for card in hand]
+        suits = [card.suit for card in hand]
+        rank_counts = Counter(ranks)
+        suit_counts = Counter(suits)
+
+        # Check for poker hand rankings
+        if len(set(suits)) == 1 and len(set(ranks)) == 5 and max(rank.value for rank in ranks) - min(
+                rank.value for rank in ranks) == 4:
+            return 9  # Straight flush
+        elif any(count == 4 for count in rank_counts.values()):
+            return 8  # Four of a kind
+        elif any(count == 3 for count in rank_counts.values()) and any(count == 2 for count in rank_counts.values()):
+            return 7  # Full house
+        elif len(set(suits)) == 1:
+            return 6  # Flush
+        elif len(set(ranks)) == 5 and max(rank.value for rank in ranks) - min(rank.value for rank in ranks) == 4:
+            return 5  # Straight
+        elif any(count == 3 for count in rank_counts.values()):
+            return 4  # Three of a kind
+        elif len([count for count in rank_counts.values() if count == 2]) == 2:
+            return 3  # Two pair
+        elif any(count == 2 for count in rank_counts.values()):
+            return 2  # One pair
+        else:
+            return 1  # High card
 
     def event_new_round(self, round: Round):
         pass
