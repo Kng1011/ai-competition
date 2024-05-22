@@ -5,7 +5,7 @@ from games.hlpoker.action import HLPokerAction
 import random
 from games.hlpoker.round import Round
 from games.state import State
-from multiprocessing import Pool
+import numpy as np
 
 
 class PokerPlayer(HLPokerPlayer):
@@ -36,7 +36,12 @@ class PokerPlayer(HLPokerPlayer):
             if recent_actions[i] == HLPokerAction.RAISE and recent_actions[i - 1] == HLPokerAction.FOLD:
                 raise_after_fold += 1
 
-        for _ in range(50):  # number of simulations
+        if state.get_current_round() == Round.Preflop or hand_evaluation < 6:
+            num_simulations = 100
+        else:
+            num_simulations = 150
+
+        for _ in range(num_simulations):  # number of simulations
             for action in possible_actions:
                 result = self.simulate_hand(state, action)
                 if hand_evaluation != 0:
@@ -74,8 +79,13 @@ class PokerPlayer(HLPokerPlayer):
         simulated_state.update(action)
         while not simulated_state.is_finished():
             possible_actions = simulated_state.get_possible_actions()
-            random_action = random.choice(possible_actions)
-            simulated_state.update(random_action)
+            if HLPokerAction.CALL in possible_actions:
+                # If the opponent always calls, choose call if it's a possible action
+                opponent_action = HLPokerAction.CALL
+            else:
+                # If call is not a possible action, choose a random action
+                opponent_action = random.choice(possible_actions)
+            simulated_state.update(opponent_action)
         return simulated_state.get_result(self.get_current_pos()) + self.evaluate_hand(self.current_cards)
 
     @staticmethod
