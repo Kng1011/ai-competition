@@ -36,7 +36,7 @@ class PokerPlayer(HLPokerPlayer):
             if recent_actions[i] == HLPokerAction.RAISE and recent_actions[i - 1] == HLPokerAction.FOLD:
                 raise_after_fold += 1
 
-        for _ in range(150):  # number of simulations
+        for _ in range(50):  # number of simulations
             for action in possible_actions:
                 result = self.simulate_hand(state, action)
                 if hand_evaluation != 0:
