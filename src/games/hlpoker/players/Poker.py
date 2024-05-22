@@ -23,6 +23,19 @@ class PokerPlayer(HLPokerPlayer):
         if len(board_cards) + len(private_cards) >= 5:
             hand_evaluation = self.evaluate_hand(private_cards + board_cards)
 
+        # Calculate the frequency of each action
+        N = 25  # Number of recent actions to consider
+        recent_actions = self.opponent_actions[-N:] if len(self.opponent_actions) > N else self.opponent_actions
+        action_counts = Counter(recent_actions)
+        total_actions = len(recent_actions)
+        action_frequencies = {action: count / total_actions for action, count in action_counts.items()}
+
+        # Check if the opponent tends to raise after folding
+        raise_after_fold = 0
+        for i in range(1, len(recent_actions)):
+            if recent_actions[i] == HLPokerAction.RAISE and recent_actions[i - 1] == HLPokerAction.FOLD:
+                raise_after_fold += 1
+
         for _ in range(150):  # number of simulations
             for action in possible_actions:
                 result = self.simulate_hand(state, action)
@@ -32,15 +45,24 @@ class PokerPlayer(HLPokerPlayer):
                 else:
                     action_results[action].append(result)
 
-        best_action = max(action_results, key=lambda action: sum(action_results[action]) / len(action_results[action]))
+        # Adjust strategy based on action frequencies and opponent's tendencies
+        if action_frequencies.get(HLPokerAction.RAISE, 0) > 0.5 or raise_after_fold > 0.5 * N:
+            # If the opponent raises more than 50% of the time or tends to raise after folding, be more aggressive
+            best_action = max(action_results,
+                              key=lambda action: sum(action_results[action]) / len(action_results[action]))
+        elif action_frequencies.get(HLPokerAction.FOLD, 0) > 0.5:
+            # If the opponent folds more than 50% of the time, be more conservative
+            best_action = min(action_results,
+                              key=lambda action: sum(action_results[action]) / len(action_results[action]))
+        else:
+            # If the opponent's actions are balanced, use a balanced strategy
+            best_action = max(action_results,
+                              key=lambda action: sum(action_results[action]) / len(action_results[action]))
+
         return best_action
 
-    def handle_opponent_action(self, action):
-        self.opponent_actions.append(action)
-        action_counts = Counter(self.opponent_actions)
-
     def monte_carlo_simulation(self, state: HLPokerState, action: HLPokerAction, num_simulations: int):
-        num_wins = 20
+        num_wins = 0
         for _ in range(num_simulations):
             result = self.simulate_hand(state, action)
             if result > 0:
