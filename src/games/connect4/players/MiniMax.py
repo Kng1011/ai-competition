@@ -9,9 +9,10 @@ from games.state import State
 
 class MiniMaxConnect4Player(Connect4Player):
 
-    def __init__(self, name):
+    def __init__(self, name, max_depth=4):
         super().__init__(name)
         self.memo = {}
+        self.max_depth = max_depth
 
     def minimax(self, state: Connect4State, depth, alpha, beta, maximizingPlayer):
         pos = self.get_current_pos()
@@ -80,6 +81,9 @@ class MiniMaxConnect4Player(Connect4Player):
         return result
 
     def get_action(self, state: Connect4State):
+        if self.max_depth is None:
+            max_depth = self.max_depth
+
         possible_actions = state.get_possible_actions()
         center_col = state.get_num_cols() // 2
 
@@ -93,9 +97,14 @@ class MiniMaxConnect4Player(Connect4Player):
 
         possible_actions.sort(key=action_score, reverse=True)
 
-        column, _ = self.minimax(state, depth=4, alpha=-math.inf, beta=math.inf, maximizingPlayer=True)
-        if column is not None:
-            return Connect4Action(column)
+        best_action = None
+        for depth in range(1, self.max_depth + 1):  # max_depth é a profundidade máxima desejada
+            column, _ = self.minimax(state, depth=depth, alpha=-math.inf, beta=math.inf, maximizingPlayer=True)
+            if column is not None:
+                best_action = Connect4Action(column)
+            else:
+                break  # Se não houver ação válida para a profundidade atual, pare a iteração
+        return best_action
 
     def event_action(self, pos: int, action, new_state: State):
         pass
@@ -107,36 +116,85 @@ class MiniMaxConnect4Player(Connect4Player):
     def score_position(grid, piece):
         score = 0
         opponent_piece = 1 if piece == 2 else 2
-
-        def count_pieces(window, piece):
-            return sum(1 for x in window if x == piece)
+        center_col = len(grid[0]) // 2
 
         # Score center column
-        center_col = len(grid[0]) // 2
         center_array = [row[center_col] for row in grid]
-        center_count = count_pieces(center_array, piece)
+        center_count = center_array.count(piece)
         score += center_count * 3
 
-        # Horizontal, vertical, and diagonal scoring
+        # Padrões de Bloqueio
+        for r in range(len(grid)):
+            for c in range(len(grid[0])):
+                if grid[r][c] == opponent_piece:
+                    # Horizontal
+                    if c <= len(grid[0]) - 4:
+                        window = grid[r][c:c + 4]
+                        if window.count(opponent_piece) == 3 and window.count(0) == 1:
+                            score -= 10
+                    # Vertical
+                    if r <= len(grid) - 4:
+                        window = [grid[i][c] for i in range(r, r + 4)]
+                        if window.count(opponent_piece) == 3 and window.count(0) == 1:
+                            score -= 10
+                    # Diagonal (positiva)
+                    if c <= len(grid[0]) - 4 and r <= len(grid) - 4:
+                        window = [grid[r + i][c + i] for i in range(4)]
+                        if window.count(opponent_piece) == 3 and window.count(0) == 1:
+                            score -= 10
+                    # Diagonal (negativa)
+                    if c >= 3 and r <= len(grid) - 4:
+                        window = [grid[r + i][c - i] for i in range(4)]
+                        if window.count(opponent_piece) == 3 and window.count(0) == 1:
+                            score -= 10
+
+        # Padrões de Ataque
         for r in range(len(grid)):
             for c in range(len(grid[0])):
                 if grid[r][c] == piece:
-                    # Horizontal scoring
+                    # Horizontal
                     if c <= len(grid[0]) - 4:
                         window = grid[r][c:c + 4]
                         score += MiniMaxConnect4Player.evaluate_window(window, piece, opponent_piece)
-                    # Vertical scoring
+                    # Vertical
                     if r <= len(grid) - 4:
                         window = [grid[i][c] for i in range(r, r + 4)]
                         score += MiniMaxConnect4Player.evaluate_window(window, piece, opponent_piece)
-                    # Positive sloped diagonal scoring
+                    # Diagonal (positiva)
                     if c <= len(grid[0]) - 4 and r <= len(grid) - 4:
                         window = [grid[r + i][c + i] for i in range(4)]
                         score += MiniMaxConnect4Player.evaluate_window(window, piece, opponent_piece)
-                    # Negative sloped diagonal scoring
+                    # Diagonal (negativa)
                     if c >= 3 and r <= len(grid) - 4:
                         window = [grid[r + i][c - i] for i in range(4)]
                         score += MiniMaxConnect4Player.evaluate_window(window, piece, opponent_piece)
+
+            # Padrões específicos
+            for r in range(len(grid)):
+                for c in range(len(grid[0])):
+                    if grid[r][c] == piece:
+                        # Verificar padrões horizontais
+                        if c <= len(grid[0]) - 4:
+                            window = grid[r][c:c + 4]
+                            if window.count(piece) == 3 and window.count(0) == 1:
+                                score += 10  # Peso extra para padrão de 3 peças com espaço vazio ao lado
+                        # Verificar padrões verticais
+                        if r <= len(grid) - 4:
+                            window = [grid[i][c] for i in range(r, r + 4)]
+                            if window.count(piece) == 3 and window.count(0) == 1:
+                                score += 10  # Peso extra para padrão de 3 peças com espaço vazio abaixo
+                        # Verificar padrões diagonais (positivas)
+                        if c <= len(grid[0]) - 4 and r <= len(grid) - 4:
+                            window = [grid[r + i][c + i] for i in range(4)]
+                            if window.count(piece) == 3 and window.count(0) == 1:
+                                score += 10  # Peso extra para padrão de 3 peças com espaço vazio na diagonal (positiva)
+                        # Verificar padrões diagonais (negativas)
+                        if c >= 3 and r <= len(grid) - 4:
+                            window = [grid[r + i][c - i] for i in range(4)]
+                            if window.count(piece) == 3 and window.count(0) == 1:
+                                score += 10  # Peso extra para padrão de 3 peças com espaço vazio na diagonal (negativa)
+
+
 
         return score
 
